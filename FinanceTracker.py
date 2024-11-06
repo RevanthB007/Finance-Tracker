@@ -191,12 +191,12 @@ class FinanceTracker:
                 print(f"{transaction_type}: ₹{abs(transaction.amount)} - {transaction.description} on {transaction.date.strftime('%Y-%m-%d')}")"""
     
     def view_transaction_by_date(self , year =None , month = None , day = None):
-        if not self.head:
+        if not self.history_ll.head:
             print("No transactions recorded.")
             return
         
         print("\nTransaction History:")
-        current = self.head
+        current = self.history_ll.head
         while current and current.next:
             current=current.next
         
@@ -206,11 +206,7 @@ class FinanceTracker:
             if ((year is None or transaction_date.year == year) and (month is None or transaction_date.month == month) and (day is None or transaction_date.day == day)):
                 print(f"₹{abs(current.amount)} - {current.description} in {current.category} on {transaction_date.strftime('%Y-%m-%d')}")
 
-        current = current.prev
-
-        
-
-
+            current = current.prev
 
 
     def undo_last_transaction(self):
@@ -392,6 +388,24 @@ class FinanceTracker:
             elif choice == "7":
                 tracker.history_ll.display_transactions()
             elif choice == "8":
+                year_input = input("Enter the year (or press Enter to skip): ")
+                if year_input:
+                    year = int(year_input)
+                else:
+                    year = None
+                month_input = input("Enter the month (or press Enter to skip): ")
+                if month_input:
+                    month = int(month_input)
+                else:
+                    month = None
+                date_input = input("Enter the date (or press Enter to skip): ")
+                if date_input:
+                    date = int(date_input)
+                else:
+                    date = None
+
+                tracker.view_transaction_by_date(year,month,date)
+            elif choice == "9":
                 print("quit the application successfully")
                 homepage()
             else:
