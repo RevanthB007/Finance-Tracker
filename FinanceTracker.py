@@ -30,7 +30,7 @@ class User:
 
     
 class Transaction:
-    def __init__(self, amount, description, category, date=None):
+    def __init__(self, amount, description, category, date):
         self.amount = amount
         self.description = description
         self.category = category
@@ -70,8 +70,8 @@ class LinkedList:
     def __init__(self):
         self.head = None
 
-    def add_transaction(self, amount, description, category):
-        new_transaction = Transaction(amount, description, category)
+    def add_transaction(self, amount, description, category,date):
+        new_transaction = Transaction(amount, description, category,date)
         if not self.head:
             self.head = new_transaction
         else:
@@ -125,15 +125,15 @@ class FinanceTracker:
         else:
             self.category_queues[category]=Queue() #creating new key value pair    
 
-    def add_expense(self, amount, description, category):
+    def add_expense(self, amount, description, category,date):
         if category not in self.category_queues:
             print("Invalid category. Please choose from Food, Travel, or Clothing.")
             return
         
-        new_expense = Transaction(-amount, description, category)
+        new_expense = Transaction(-amount, description, category,date)
 
         #history linked list 
-        self.history_ll.add_transaction(-amount,description,category)
+        self.history_ll.add_transaction(-amount,description,category,date)
 
         # Add to linked list of expenses
         #self.expenses.add_transaction(-amount, description, category)
@@ -148,9 +148,9 @@ class FinanceTracker:
         self.prev_transaction.push(("Expense",new_expense))
         print(f"Expense added: ₹{amount} for {description} in {category}")
 
-    def add_income(self, amount, description):
-        new_income = Transaction(amount, description, "Income")
-        self.history_ll.add_transaction(amount, description , "Income")
+    def add_income(self, amount, description,date):
+        new_income = Transaction(amount, description, "Income",date)
+        self.history_ll.add_transaction(amount, description , "Income",date)
         #self.income.add_transaction(amount, description, "Income")
         self.history.push(("Income", new_income))
         self.redo_stack = Stack()  # Clear the redo stack when a new transaction is added
@@ -348,7 +348,16 @@ class FinanceTracker:
             if choice == "1":
                 amount = float(input("Enter income amount: "))
                 description = input("Enter income description: ")
-                tracker.add_income(amount, description)
+                date_input = input("Enter the date (YYYY-MM-DD): ")
+
+                # Convert to datetime object
+                try:
+                    date_object = datetime.strptime(date_input, "%Y-%m-%d")
+                    print(f"Converted date: {date_object}")
+                except ValueError:
+                    print("Invalid date format. Please use YYYY-MM-DD.")
+
+                tracker.add_income(amount, description,date_object)
             elif choice == "2":
                 while True:
                     print("\n Expense Menu \n")
@@ -363,7 +372,17 @@ class FinanceTracker:
                         amount = float(input("Enter expense amount: "))
                         description = input("Enter expense description: ")
                         category = input("Enter expense category (Food, Travel, Clothing): ")
-                        tracker.add_expense(amount, description, category)
+                                                # Get user input
+                        date_input = input("Enter the date (YYYY-MM-DD): ")
+
+                        # Convert to datetime object
+                        try:
+                            date_object = datetime.strptime(date_input, "%Y-%m-%d")
+                            print(f"Converted date: {date_object}")
+                        except ValueError:
+                            print("Invalid date format. Please use YYYY-MM-DD.")
+
+                        tracker.add_expense(amount, description, category,date_object)
                     elif sub_choice == "2":
                         tracker.undo_last_transaction()
                     elif sub_choice == "3":
