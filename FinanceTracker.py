@@ -92,16 +92,17 @@ class LinkedList:
             current=current.next
         while current:
             print(f"₹{abs(current.amount)} - {current.description} in {current.category} on {current.date.strftime('%Y-%m-%d')}")
-            current=current.prev()
+            current=current.prev
         print()
         
-                
+            
 
 class FinanceTracker:
     
     def __init__(self):
-        self.expenses = LinkedList()  # Linked list for expenses
-        self.income = LinkedList()  # Linked list for income
+        self.history_ll=LinkedList()
+        # self.expenses = LinkedList()  # Linked list for expenses
+       # self.income = LinkedList()  # Linked list for income
         self.history = Stack()  # Stack for transaction history
         self.redo_stack = Stack()  # Stack for redo functionality
         self.category_queues = {
@@ -131,8 +132,11 @@ class FinanceTracker:
         
         new_expense = Transaction(-amount, description, category)
 
+        #history linked list 
+        self.history_ll.add_transaction(-amount,description,category)
+
         # Add to linked list of expenses
-        self.expenses.add_transaction(-amount, description, category)
+        #self.expenses.add_transaction(-amount, description, category)
 
         # Add to the respective category queue
         self.category_queues[category].enqueue(new_expense)
@@ -146,7 +150,8 @@ class FinanceTracker:
 
     def add_income(self, amount, description):
         new_income = Transaction(amount, description, "Income")
-        self.income.add_transaction(amount, description, "Income")
+        self.history_ll.add_transaction(amount, description , "Income")
+        #self.income.add_transaction(amount, description, "Income")
         self.history.push(("Income", new_income))
         self.redo_stack = Stack()  # Clear the redo stack when a new transaction is added
 
@@ -176,18 +181,43 @@ class FinanceTracker:
             current = current.next
         return transactions
 
-    def view_history(self):
+    """def view_history(self):
+        This code has been dicarded cuz it directly accesses the stack which should not be done
         if self.history.is_empty():
             print("No transaction history")
         else:
             print("Transaction History (Most recent first):")
             for transaction_type, transaction in reversed(self.history.items):
-                print(f"{transaction_type}: ₹{abs(transaction.amount)} - {transaction.description} on {transaction.date.strftime('%Y-%m-%d')}")
+                print(f"{transaction_type}: ₹{abs(transaction.amount)} - {transaction.description} on {transaction.date.strftime('%Y-%m-%d')}")"""
+    
+    def view_transaction_by_date(self , year =None , month = None , day = None):
+        if not self.head:
+            print("No transactions recorded.")
+            return
+        
+        print("\nTransaction History:")
+        current = self.head
+        while current and current.next:
+            current=current.next
+        
+        while current:
+            transaction_date = current.date
+
+            if ((year is None or transaction_date.year == year) and (month is None or transaction_date.month == month) and (day is None or transaction_date.day == day)):
+                print(f"₹{abs(current.amount)} - {current.description} in {current.category} on {transaction_date.strftime('%Y-%m-%d')}")
+
+        current = current.prev
+
+        
+
+
+
 
     def undo_last_transaction(self):
         if not self.history.is_empty():
-            last_transaction = self.history.pop()
+            last_transaction = self.history.pop()  
             self.redo_stack.push(last_transaction)
+            #print(last_transaction)
             self.prev_transaction = Stack()
             if last_transaction[0] == "Expense":
                 self.remove_expense(last_transaction[1])
@@ -237,31 +267,71 @@ class FinanceTracker:
             else:
                 print(f"Remaining budget for {category}: ₹{limit - total_spent:.2f}")
 
-    def remove_expense(self, expense):
-        if not self.expenses.head:
+    """ def remove_expense(self, expense):
+        if not self.history_ll.head:
             return
-        current = self.expenses.head
+        
+        current = self.history_ll.head
+        
+        # If the head is the expense to be removed
         if current == expense:
-            self.expenses.head = current.next
+            self.history_ll.head = current.next
+            if current.next:
+                current.next.prev = None  # Update the previous pointer of the new head
             return
+        
+        # Traverse the list to find the expense
         while current.next:
             if current.next == expense:
-                current.next = current.next.next
+                current.next = current.next.next  # Bypass the expense node
+                if current.next:  # If there is a next node, update its prev pointer
+                    current.next.prev = current
                 return
+            current = current.next """
+    
+    def remove_expense(self,expense):
+        if not self.history_ll.head:
+            return
+    
+        # If there's only one node, remove it
+        if not self.history_ll.head.next:
+            self.history_ll.head = None
+            return
+        
+        # Traverse to the end of the list
+        current = self.history_ll.head
+        while current.next:
             current = current.next
+        
+        # Update the second-last node's next pointer to None
+        if current.prev:
+            current.prev.next = None
+
 
     def remove_income(self, income):
-        if not self.income.head:
+        if not self.history_ll.head:
             return
-        current = self.income.head
-        if current == income:
-            self.income.head = current.next
+    
+        # If there's only one node, remove it
+        if not self.history_ll.head.next:
+            self.history_ll.head = None
             return
+        
+        # Traverse to the end of the list
+        current = self.history_ll.head
         while current.next:
-            if current.next == income:
-                current.next = current.next.next
-                return
             current = current.next
+        
+        # Update the second-last node's next pointer to None
+        if current.prev:
+            current.prev.next = None
+
+
+    """ def remove_income(self, income):
+        if not self.history_ll.head:
+            return
+        
+        current = self.history_ll.head """
 
     def showMenu(self ,user_tracker):
         tracker = user_tracker
@@ -269,13 +339,14 @@ class FinanceTracker:
         print("FINANCE TRACKER APPLICATION")
         while True:
             print("\n1. Add Income")
-            print("2. Add Expenses")
+            print("2. Expense Options")
             print("3. View Categorized Expenses")
             print("4. Set custom category")
             print("5. Set Budget Alert")
             print("6. View Budget Alerts")
             print("7. View Transaction History")
-            print("8. Quit")
+            print("8. View Transactions by date")
+            print("9. Quit")
             choice = input("Choose an option: ")
             
             if choice == "1":
@@ -310,7 +381,7 @@ class FinanceTracker:
             elif choice == "3":
                 tracker.view_categorized_expenses()
             elif choice == "4":
-                category = input("Enter category name")
+                category = input("Enter category name: ")
                 tracker.add_new_category(category)
             elif choice == "5":
                 category = input("Enter category for budget alert: ")
@@ -319,7 +390,7 @@ class FinanceTracker:
             elif choice == "6":
                 tracker.view_budget_alerts()
             elif choice == "7":
-                tracker.view_history()
+                tracker.history_ll.display_transactions()
             elif choice == "8":
                 print("quit the application successfully")
                 homepage()
@@ -328,8 +399,8 @@ class FinanceTracker:
 
 
 def register():
-    username=input("Enter username")
-    password=getpass.getpass("enter password")
+    username=input("Enter username: ")
+    password=getpass.getpass("enter password: ")
     u=User()
     u.register_user(username,password)
 
@@ -352,12 +423,12 @@ def homepage():
     print("Enter 1 to register")
     print("Enter 2 to login")
     
-    choice =int(input("enter choice "))
+    choice =input("enter choice: ")
 
-    if choice==1:
+    if choice=="1":
         register()
     
-    elif choice==2:
+    elif choice=="2":
         login()
     
     else:
