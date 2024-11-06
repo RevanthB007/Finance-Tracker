@@ -1,34 +1,36 @@
+#testing code
 from datetime import datetime
 import getpass
 import pandas as pd
+import matplotlib.pyplot as plt
 
 user_df = pd.DataFrame(columns=["Username", "Password","Reference"])
 
 class User:
 
 
-    
+
     def register_user(self, username ,password):
         self.username=username
         self.password=password
 
         global user_df
-        
+
 
         print(self.username ," has been registered successfully")
 
-        self.tracker=FinanceTracker()
-          
+        self.tracker = FinanceTracker()
+
         user_df.loc[len(user_df)] = {"Username": username, "Password": password, "Reference": self}
 
-   
+
         self.tracker.showMenu(self.tracker)
-    
+
     def user_login(self):
         print("\n\nLogin Successful !\n\n")
         self.tracker.showMenu(self.tracker)
 
-    
+
 class Transaction:
     def __init__(self, amount, description, category, date):
         self.amount = amount
@@ -62,7 +64,7 @@ class Queue:
 
     def enqueue(self, item):
         self.items.append(item)
-    
+
     def dequeue(self):
         self.items.pop()
 
@@ -85,7 +87,7 @@ class LinkedList:
         if not self.head:
             print("No transactions recorded.")
             return
-        
+
         print("\nTransaction History:")
         current = self.head
         while current and current.next:
@@ -94,12 +96,15 @@ class LinkedList:
             print(f"₹{abs(current.amount)} - {current.description} in {current.category} on {current.date.strftime('%Y-%m-%d')}")
             current=current.prev
         print()
+
+
         
-            
+
 
 class FinanceTracker:
-    
+
     def __init__(self):
+
         self.history_ll=LinkedList()
         # self.expenses = LinkedList()  # Linked list for expenses
        # self.income = LinkedList()  # Linked list for income
@@ -112,27 +117,29 @@ class FinanceTracker:
         }  # Queues for categorized expenses
         self.budget_limits = {}  # Dictionary for category budget limits
         self.prev_transaction = Stack()
-    
+
     def add_new_category(self,category):
         flag = False
         for i in self.category_queues:
             if i == category:
                 flag = True
                 break
-        
+
         if flag:
             print("\nCategory already exists\n")
         else:
-            self.category_queues[category]=Queue() #creating new key value pair    
+            self.category_queues[category]=Queue() #creating new key value pair
+            print("new category created :" , category)
 
     def add_expense(self, amount, description, category,date):
+
         if category not in self.category_queues:
             print("Invalid category. Please choose from Food, Travel, or Clothing.")
             return
-        
+
         new_expense = Transaction(-amount, description, category,date)
 
-        #history linked list 
+        #history linked list
         self.history_ll.add_transaction(-amount,description,category,date)
 
         # Add to linked list of expenses
@@ -149,7 +156,9 @@ class FinanceTracker:
         print(f"Expense added: ₹{amount} for {description} in {category}")
 
     def add_income(self, amount, description,date):
+
         new_income = Transaction(amount, description, "Income",date)
+
         self.history_ll.add_transaction(amount, description , "Income",date)
         #self.income.add_transaction(amount, description, "Income")
         self.history.push(("Income", new_income))
@@ -189,17 +198,17 @@ class FinanceTracker:
             print("Transaction History (Most recent first):")
             for transaction_type, transaction in reversed(self.history.items):
                 print(f"{transaction_type}: ₹{abs(transaction.amount)} - {transaction.description} on {transaction.date.strftime('%Y-%m-%d')}")"""
-    
+
     def view_transaction_by_date(self , year =None , month = None , day = None):
         if not self.history_ll.head:
             print("No transactions recorded.")
             return
-        
+
         print("\nTransaction History:")
         current = self.history_ll.head
         while current and current.next:
             current=current.next
-        
+
         while current:
             transaction_date = current.date
 
@@ -211,10 +220,10 @@ class FinanceTracker:
 
     def undo_last_transaction(self):
         if not self.history.is_empty():
-            last_transaction = self.history.pop()  
+            last_transaction = self.history.pop()
             self.redo_stack.push(last_transaction)
             #print(last_transaction)
-            self.prev_transaction = Stack()
+            self.prev_transaction = Stack()  
             if last_transaction[0] == "Expense":
                 self.remove_expense(last_transaction[1])
                 self.category_queues[last_transaction[1].category].dequeue()
@@ -229,9 +238,9 @@ class FinanceTracker:
             last_transaction = self.prev_transaction.pop()
             #self.history.push(last_transaction)
             if last_transaction[0] == "Expense":
-                self.add_expense(abs(last_transaction[1].amount) , last_transaction[1].description,last_transaction[1].category)
+                self.add_expense(abs(last_transaction[1].amount) , last_transaction[1].description,last_transaction[1].category,last_transaction[1].date)
             elif last_transaction[0] =="Income":
-                self.add_income(last_transaction[1].amount,last_transaction[1].description)
+                self.add_income(last_transaction[1].amount,last_transaction[1].description,last_transaction[1].date)
             print(f"Redid {last_transaction[0]}: ₹{abs(last_transaction[1].amount)} - {last_transaction[1].description}")
         else:
             print("no transactions to undo")
@@ -241,9 +250,9 @@ class FinanceTracker:
             redo_transaction = self.redo_stack.pop()
             #self.history.push(redo_transaction)
             if redo_transaction[0] == "Expense":
-                self.add_expense(abs(redo_transaction[1].amount), redo_transaction[1].description, redo_transaction[1].category)
+                self.add_expense(abs(redo_transaction[1].amount), redo_transaction[1].description, redo_transaction[1].category,redo_transaction[1].date)
             elif redo_transaction[0] == "Income":
-                self.add_income(redo_transaction[1].amount, redo_transaction[1].description)
+                self.add_income(redo_transaction[1].amount, redo_transaction[1].description,redo_transaction[1].date)
             print(f"Redid {redo_transaction[0]}: ₹{abs(redo_transaction[1].amount)} - {redo_transaction[1].description}")
         else:
             print("No transactions to redo.")
@@ -266,16 +275,16 @@ class FinanceTracker:
     """ def remove_expense(self, expense):
         if not self.history_ll.head:
             return
-        
+
         current = self.history_ll.head
-        
+
         # If the head is the expense to be removed
         if current == expense:
             self.history_ll.head = current.next
             if current.next:
                 current.next.prev = None  # Update the previous pointer of the new head
             return
-        
+
         # Traverse the list to find the expense
         while current.next:
             if current.next == expense:
@@ -284,21 +293,21 @@ class FinanceTracker:
                     current.next.prev = current
                 return
             current = current.next """
-    
+
     def remove_expense(self,expense):
         if not self.history_ll.head:
             return
-    
+
         # If there's only one node, remove it
         if not self.history_ll.head.next:
             self.history_ll.head = None
             return
-        
+
         # Traverse to the end of the list
         current = self.history_ll.head
         while current.next:
             current = current.next
-        
+
         # Update the second-last node's next pointer to None
         if current.prev:
             current.prev.next = None
@@ -307,26 +316,53 @@ class FinanceTracker:
     def remove_income(self, income):
         if not self.history_ll.head:
             return
-    
+
         # If there's only one node, remove it
         if not self.history_ll.head.next:
             self.history_ll.head = None
             return
-        
+
         # Traverse to the end of the list
         current = self.history_ll.head
         while current.next:
             current = current.next
-        
+
         # Update the second-last node's next pointer to None
         if current.prev:
             current.prev.next = None
 
 
+    def view_finance_analytics(self):
+    # Calculate total expenses by category
+        category_totals = {category: 0 for category in self.category_queues.keys()}
+
+        for category, queue in self.category_queues.items():
+            for expense in queue.items:
+                category_totals[category] += abs(expense.amount)
+
+    # Filter out categories with zero expenses
+        filtered_categories = {category: total for category, total in category_totals.items() if total > 0}
+
+        if not filtered_categories:
+            print("No expenses recorded in any category.")
+            return
+
+    # Prepare data for pie chart
+        categories = list(filtered_categories.keys())
+        amounts = list(filtered_categories.values())
+
+    # Create pie chart
+        plt.figure(figsize=(8, 6))
+        plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140)
+        plt.title('Percentage-wise Expenses')
+        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.show()
+
+
     """ def remove_income(self, income):
         if not self.history_ll.head:
             return
-        
+
         current = self.history_ll.head """
 
     def showMenu(self ,user_tracker):
@@ -342,22 +378,28 @@ class FinanceTracker:
             print("6. View Budget Alerts")
             print("7. View Transaction History")
             print("8. View Transactions by date")
-            print("9. Quit")
+            print("9. view finance analytics")
+            print("10. Quit")
+
             choice = input("Choose an option: ")
-            
+
             if choice == "1":
                 amount = float(input("Enter income amount: "))
                 description = input("Enter income description: ")
                 date_input = input("Enter the date (YYYY-MM-DD): ")
 
-                # Convert to datetime object
-                try:
-                    date_object = datetime.strptime(date_input, "%Y-%m-%d")
-                    print(f"Converted date: {date_object}")
-                except ValueError:
-                    print("Invalid date format. Please use YYYY-MM-DD.")
+                if date_input:
+                  # Convert to datetime object
+                  try:
+                      date_object = datetime.strptime(date_input, "%Y-%m-%d")
+                      print(f"Converted date: {date_object}")
+                  except ValueError:
+                      print("Invalid date format. Please use YYYY-MM-DD.")
+                else:
+                  date_object=datetime.now()
 
                 tracker.add_income(amount, description,date_object)
+
             elif choice == "2":
                 while True:
                     print("\n Expense Menu \n")
@@ -367,20 +409,23 @@ class FinanceTracker:
                     print("4. Redo last transaction")
                     print("5. Quit")
                     sub_choice = input("Choose an option: ")
-                    
+
                     if sub_choice == "1":
                         amount = float(input("Enter expense amount: "))
                         description = input("Enter expense description: ")
                         category = input("Enter expense category (Food, Travel, Clothing): ")
                                                 # Get user input
                         date_input = input("Enter the date (YYYY-MM-DD): ")
+                        if date_input:
+                          # Convert to datetime object
+                          try:
+                              date_object = datetime.strptime(date_input, "%Y-%m-%d")
+                              print(f"Converted date: {date_object}")
+                          except ValueError:
+                              print("Invalid date format. Please use YYYY-MM-DD.")
+                        else:
+                          date_object=datetime.now()
 
-                        # Convert to datetime object
-                        try:
-                            date_object = datetime.strptime(date_input, "%Y-%m-%d")
-                            print(f"Converted date: {date_object}")
-                        except ValueError:
-                            print("Invalid date format. Please use YYYY-MM-DD.")
 
                         tracker.add_expense(amount, description, category,date_object)
                     elif sub_choice == "2":
@@ -424,7 +469,9 @@ class FinanceTracker:
                     date = None
 
                 tracker.view_transaction_by_date(year,month,date)
-            elif choice == "9":
+            elif choice == "9":  # New option to view finance analytics
+                tracker.view_finance_analytics()
+            elif choice == "10":
                 print("quit the application successfully")
                 homepage()
             else:
@@ -455,20 +502,20 @@ def homepage():
 
     print("Enter 1 to register")
     print("Enter 2 to login")
-    
+
     choice =input("enter choice: ")
 
     if choice=="1":
         register()
-    
+
     elif choice=="2":
         login()
-    
+
     else:
         print("Invalid choice")
         print("Redirecting to homepage......")
         homepage()
-    
-    
+
+
 
 homepage()
