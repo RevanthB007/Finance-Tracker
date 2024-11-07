@@ -97,6 +97,60 @@ class LinkedList:
             current=current.prev
         print()
 
+    def store_list(self):
+        if self.head is None:
+            print("No transactions recorded.")
+            return  # Exit if no transactions
+
+        # Initialize lst outside any loops
+        lst = []  
+        current = self.head
+
+        # Collect transactions from the linked list
+        while current is not None:
+            lst.append(current)
+            current = current.next
+
+        # Sort the list
+        sorted_lst = self.merge_sort(lst)
+        
+        # Print the sorted transactions
+        for transaction in sorted_lst:
+            print(f"₹{abs(transaction.amount)} - {transaction.description} in {transaction.category} on {transaction.date.strftime('%Y-%m-%d')}")
+
+        
+
+    def merge_sort(self, lst):
+        # Base case: if the list has 1 or fewer elements, it's already sorted
+        if len(lst) <= 1:
+            return lst
+
+        # Split the list into two halves
+        mid = len(lst) // 2
+        left = lst[:mid]
+        right = lst[mid:]
+
+        # Recursively sort each half and merge by date
+        return self.merge(self.merge_sort(left), self.merge_sort(right))
+
+    def merge(self, left, right):
+        result = []
+        i = j = 0
+
+        # Merge two sorted lists based on date attribute
+        while i < len(left) and j < len(right):
+            if left[i].date < right[j].date:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+
+        # Append remaining elements (if any)
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result
+
 
         
 
@@ -167,6 +221,7 @@ class FinanceTracker:
         self.prev_transaction = Stack()
         self.prev_transaction.push(("Income",new_income))
         print(f"Income added: ₹{amount} from {description}")
+
 
     def view_categorized_expenses(self):
         for category, q in self.category_queues.items():
@@ -379,7 +434,8 @@ class FinanceTracker:
             print("7. View Transaction History")
             print("8. View Transactions by date")
             print("9. view finance analytics")
-            print("10. Quit")
+            print("10. View all transactions sorted by date")
+            print("11. Quit")
 
             choice = input("Choose an option: ")
 
@@ -413,14 +469,18 @@ class FinanceTracker:
                     if sub_choice == "1":
                         amount = float(input("Enter expense amount: "))
                         description = input("Enter expense description: ")
-                        category = input("Enter expense category (Food, Travel, Clothing): ")
+                        list=[]
+                        for i in tracker.category_queues:
+                          list.append(i)
+                        print("Current categories :",list)
+                        category = input("Enter expense category : ")
                                                 # Get user input
                         date_input = input("Enter the date (YYYY-MM-DD): ")
                         if date_input:
                           # Convert to datetime object
                           try:
                               date_object = datetime.strptime(date_input, "%Y-%m-%d")
-                              print(f"Converted date: {date_object}")
+                              #print(f"Converted date: {date_object}")
                           except ValueError:
                               print("Invalid date format. Please use YYYY-MM-DD.")
                         else:
@@ -471,7 +531,10 @@ class FinanceTracker:
                 tracker.view_transaction_by_date(year,month,date)
             elif choice == "9":  # New option to view finance analytics
                 tracker.view_finance_analytics()
+            
             elif choice == "10":
+              tracker.history_ll.store_list()
+            elif choice == "11":
                 print("quit the application successfully")
                 homepage()
             else:
@@ -481,6 +544,7 @@ class FinanceTracker:
 def register():
     username=input("Enter username: ")
     password=getpass.getpass("enter password: ")
+    print()
     u=User()
     u.register_user(username,password)
 
@@ -495,6 +559,8 @@ def login():
         user_ref.user_login()
     else:
         print("Invalid login credintials")
+        print("Redirecting to homepage......\n")
+        homepage()
 
 
 def homepage():
